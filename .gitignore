@@ -42,3 +42,7 @@ Thumbs.db
 *.mov
 *.mkv
 
+
+*.mp4
+!docs/static/video/*.mp4
+
