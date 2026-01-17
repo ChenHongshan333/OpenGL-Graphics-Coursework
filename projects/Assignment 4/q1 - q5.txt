@@ -1,0 +1,629 @@
+// CS3241Lab4.cpp : Complete version with Bézier curves, tangents (T) and objects (O)
+// Objects are your "Cute Cat" only (the old circle/worm demo is fully removed).
+// Comments are in English as requested.
+
+#include "math.h"
+#include <iostream>
+#include <fstream>
+#include <cstring> // for memcpy (UNDO stack)
+
+#ifdef _WIN32
+#include <Windows.h>
+#include "GL/glut.h"
+#ifndef M_PI
+#define M_PI 3.141592654
+#endif
+#elif __APPLE__
+#include <OpenGL/gl.h>
+#include <GLUT/GLUT.h>
+#endif
+
+#define MAXPTNO 1000
+#define NLINESEGMENT 32
+#define NOBJECTONCURVE 8
+
+using namespace std;
+
+// ------------------------------
+// Data structures
+// ------------------------------
+struct Point { int x, y; };
+struct FPoint { float x, y; };
+
+// Control points storage
+int nPt = 0;
+Point ptList[MAXPTNO];
+
+// Display toggles
+bool displayControlPoints = true;   // 'P'
+bool displayControlLines = true;    // 'L'
+bool displayTangentVectors = false; // 'T'
+bool displayObjects = false;        // 'O'
+bool C1Continuity = false;          // 'C'
+
+// ------------------------------
+// UNDO stack (snapshots of ptList + nPt)
+// ------------------------------
+struct Snapshot {
+    int n;
+    Point pts[MAXPTNO];
+};
+static const int MAX_UNDO = 100;
+Snapshot undoStack[MAX_UNDO];
+int undoTop = 0;    // next write position (circular)
+int undoCount = 0;  // number of stored snapshots (<= MAX_UNDO)
+
+static inline void pushUndo()
+{
+    undoStack[undoTop].n = nPt;
+    if (nPt > 0) {
+        memcpy(undoStack[undoTop].pts, ptList, sizeof(Point) * nPt);
+    }
+    undoTop = (undoTop + 1) % MAX_UNDO;
+    if (undoCount < MAX_UNDO) undoCount++;
+}
+
+static inline bool popUndo()
+{
+    if (undoCount == 0) return false;
+    undoTop = (undoTop - 1 + MAX_UNDO) % MAX_UNDO;
+    const Snapshot& s = undoStack[undoTop];
+    nPt = s.n;
+    if (nPt > 0) {
+        memcpy(ptList, s.pts, sizeof(Point) * nPt);
+    }
+    undoCount--;
+    return true;
+}
+
+// ------------------------------
+// Curve helpers
+// ------------------------------
+static inline int curveCount() {
+    if (nPt < 4) return 0;
+    // Curves are grouped as [0..3], [3..6], [6..9], ... (stride = 3)
+    return 1 + (nPt - 4) / 3;
+}
+
+// Get the 4 control points of curve c; optionally apply C1 virtual replacement to P1.
+// Returns original P1 in origP1Out and whether replacement happened via hasAdjusted.
+static inline void getCurveControlPoints(
+    int curveIdx,
+    Point& P0, Point& P1, Point& P2, Point& P3,
+    bool useC1Adjusted,
+    Point& origP1Out,
+    bool& hasAdjusted)
+{
+    int i = curveIdx * 3;
+    P0 = ptList[i];
+    P1 = ptList[i + 1];
+    P2 = ptList[i + 2];
+    P3 = ptList[i + 3];
+
+    origP1Out = P1;
+    hasAdjusted = false;
+
+    // C1 continuity between prev (Q0..Q3) and current (P0..P3):
+    // P0 == Q3 (shared). Enforce P1 - P0 = Q3 - Q2  =>  P1 = 2*P0 - Q2
+    if (useC1Adjusted && curveIdx > 0) {
+        Point Q2 = ptList[i - 1];
+        Point newP1;
+        newP1.x = 2 * P0.x - Q2.x;
+        newP1.y = 2 * P0.y - Q2.y;
+        P1 = newP1;
+        hasAdjusted = true;
+    }
+}
+
+// Evaluate cubic Bézier at t in [0,1]
+static inline FPoint evalBezier(const Point& P0, const Point& P1, const Point& P2, const Point& P3, float t) {
+    float u = 1.0f - t;
+    float b0 = u * u * u;
+    float b1 = 3 * u * u * t;
+    float b2 = 3 * u * t * t;
+    float b3 = t * t * t;
+    FPoint r;
+    r.x = b0 * P0.x + b1 * P1.x + b2 * P2.x + b3 * P3.x;
+    r.y = b0 * P0.y + b1 * P1.y + b2 * P2.y + b3 * P3.y;
+    return r;
+}
+
+// Evaluate derivative B'(t) for tangent direction
+static inline FPoint evalBezierDeriv(const Point& P0, const Point& P1, const Point& P2, const Point& P3, float t) {
+    // B'(t) = 3[(1-t)^2 (P1-P0) + 2(1-t)t (P2-P1) + t^2 (P3-P2)]
+    float u = 1.0f - t;
+    float d0 = 3.0f * u * u;
+    float d1 = 6.0f * u * t;
+    float d2 = 3.0f * t * t;
+    FPoint r;
+    r.x = d0 * (P1.x - P0.x) + d1 * (P2.x - P1.x) + d2 * (P3.x - P2.x);
+    r.y = d0 * (P1.y - P0.y) + d1 * (P2.y - P1.y) + d2 * (P3.y - P2.y);
+    return r;
+}
+
+// Normalize a 2D vector; return length via lenOut
+static inline FPoint normalize2D(const FPoint& v, float& lenOut) {
+    float len = sqrtf(v.x * v.x + v.y * v.y);
+    lenOut = len;
+    FPoint u = v;
+    if (len > 1e-6f) {
+        u.x /= len;
+        u.y /= len;
+    }
+    else {
+        u.x = 1.0f; u.y = 0.0f; // default axis if degenerate
+    }
+    return u;
+}
+
+// ------------------------------
+// Arrow (for tangent vectors)
+// ------------------------------
+void drawRightArrow()
+{
+    glColor3f(0, 1, 0);
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(0, 0);
+    glVertex2f(100, 0);
+    glVertex2f(95, 5);
+    glVertex2f(100, 0);
+    glVertex2f(95, -5);
+    glEnd();
+}
+
+// Place this arrow in world at p, aligned to dir, scaled (base arrow ~100 units)
+static void drawArrowAt(const FPoint& p, const FPoint& dir, float scale)
+{
+    float len;
+    FPoint t = normalize2D(dir, len);
+    float angleDeg = atan2f(t.y, t.x) * 180.0f / (float)M_PI;
+
+    glPushMatrix();
+    glTranslatef(p.x, p.y, 0.0f);
+    glRotatef(angleDeg, 0.0f, 0.0f, 1.0f);
+    glScalef(scale, scale, 1.0f);  // arrow base is 100px, so e.g. 0.4 -> ~40px
+    drawRightArrow();
+    glPopMatrix();
+}
+
+// ------------------------------
+// Your "Cute Cat" object (local frame drawing)
+// ------------------------------
+static void cc_drawCircle(float r, int num_segments) {
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(0.0f, 0.0f);
+    for (int i = 0; i <= num_segments; i++) {
+        float theta = 2.0f * (float)M_PI * i / num_segments;
+        float x = r * cosf(theta);
+        float y = r * sinf(theta);
+        glVertex2f(x, y);
+    }
+    glEnd();
+}
+
+static void cc_drawTriangle() {
+    glBegin(GL_TRIANGLES);
+    glVertex2f(-0.4f / 2.0f, 0.0f);
+    glVertex2f(0.4f / 2.0f, 0.0f);
+    glVertex2f(0.0f, 0.35f);
+    glEnd();
+}
+
+static void cc_drawArc(float r, float theta_start, float theta_end, int num_segments) {
+    glBegin(GL_LINE_STRIP);
+    for (int i = 0; i <= num_segments; i++) {
+        float theta = theta_start + (theta_end - theta_start) * i / num_segments;
+        float x = r * cosf(theta);
+        float y = -r * sinf(theta) - r; // vertical offset preserved from your code
+        glVertex2f(x, y);
+    }
+    glEnd();
+}
+
+// Cat drawn around the origin in local coords (X right, Y up). Approx size ~1x1.
+static void drawCuteCatUnit()
+{
+    // face
+    glPushMatrix();
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glScalef(1.1f, 1.0f, 1.0f);
+    cc_drawCircle(0.5f, 100);
+    glPopMatrix();
+
+    // blue areas on head
+    glPushMatrix();
+    glColor3f(0.2f, 0.6f, 0.9f);
+    glTranslatef(0.25f, 0.30f, 0.0f);
+    glRotatef(-37.0f, 0, 0, 1);
+    glScalef(1.1f, 0.49f, 1.0f);
+    cc_drawCircle(0.35f, 100);
+    glPopMatrix();
+
+    glPushMatrix();
+    glColor3f(0.2f, 0.6f, 0.9f);
+    glTranslatef(-0.25f, 0.30f, 0.0f);
+    glRotatef(37.0f, 0, 0, 1);
+    glScalef(1.1f, 0.49f, 1.0f);
+    cc_drawCircle(0.35f, 100);
+    glPopMatrix();
+
+    // ears
+    glPushMatrix();
+    glColor3f(0.2f, 0.6f, 0.9f);
+    glTranslatef(-0.25f, 0.4f, 0.0f);
+    glRotatef(20.0f, 0, 0, 1);
+    cc_drawTriangle();
+    glPopMatrix();
+
+    glPushMatrix();
+    glColor3f(0.2f, 0.6f, 0.9f);
+    glTranslatef(0.25f, 0.4f, 0.0f);
+    glRotatef(-20.0f, 0, 0, 1);
+    cc_drawTriangle();
+    glPopMatrix();
+
+    // blush
+    glPushMatrix();
+    glColor3f(1.0f, 0.7f, 0.7f);
+    glTranslatef(-0.3f, -0.05f, 0.0f);
+    glScalef(1.3f, 0.7f, 1.0f);
+    cc_drawCircle(0.1f, 50);
+    glPopMatrix();
+
+    glPushMatrix();
+    glColor3f(1.0f, 0.7f, 0.7f);
+    glTranslatef(0.3f, -0.05f, 0.0f);
+    glScalef(1.3f, 0.7f, 1.0f);
+    cc_drawCircle(0.1f, 50);
+    glPopMatrix();
+
+    // eyes
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glLineWidth(6.0f);
+    glTranslatef(-0.23f, 0.08f, 0.0f);
+    glRotatef(13.0f, 0, 0, 1);
+    cc_drawArc(0.12f, 1.25f * (float)M_PI, 1.8f * (float)M_PI, 1000);
+    glPopMatrix();
+
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glLineWidth(6.0f);
+    glTranslatef(0.23f, 0.08f, 0.0f);
+    glRotatef(-13.0f, 0, 0, 1);
+    cc_drawArc(0.12f, 1.2f * (float)M_PI, 1.75f * (float)M_PI, 1000);
+    glPopMatrix();
+
+    // mouth
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glLineWidth(4.0f);
+    glTranslatef(-0.036f, 0.0f, 0.0f);
+    glRotatef(12.0f, 0, 0, 1);
+    cc_drawArc(0.03f, 0.0f, (float)M_PI, 100);
+    glPopMatrix();
+
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glLineWidth(4.0f);
+    glTranslatef(0.036f, 0.0f, 0.0f);
+    glRotatef(-12.0f, 0, 0, 1);
+    cc_drawArc(0.03f, 0.0f, (float)M_PI, 100);
+    glPopMatrix();
+
+    // eyebrows
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glLineWidth(4.0f);
+    glTranslatef(-0.17f, 0.22f, 0.0f);
+    glRotatef(12.0f, 0, 0, 1);
+    cc_drawArc(0.08f, 1.4f * (float)M_PI, 1.6f * (float)M_PI, 100);
+    glPopMatrix();
+
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glLineWidth(4.0f);
+    glTranslatef(0.17f, 0.22f, 0.0f);
+    glRotatef(-12.0f, 0, 0, 1);
+    cc_drawArc(0.08f, 1.4f * (float)M_PI, 1.6f * (float)M_PI, 100);
+    glPopMatrix();
+
+    // jaw
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glLineWidth(3.0f);
+    glTranslatef(0.0f, 0.02f, 0.0f);
+    cc_drawArc(0.07f, 0.4f * (float)M_PI, 0.6f * (float)M_PI, 100);
+    glPopMatrix();
+
+    // whisker dots
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glPointSize(6.0f);
+    glBegin(GL_POINTS);
+    glVertex2f(-0.4f, -0.02f);
+    glVertex2f(0.4f, -0.02f);
+    glEnd();
+    glPopMatrix();
+}
+
+// Place your "Cute Cat" in world at p, aligned to tangent dir.
+// scalePixels: desired pixel scale for the unit cat (unit cat ~1.0 wide/high).
+static void drawObjectAt(const FPoint& p, const FPoint& dir, float scalePixels)
+{
+    float len;
+    FPoint t = normalize2D(dir, len);
+    float angleDeg = atan2f(t.y, t.x) * 180.0f / (float)M_PI;
+
+    // IMPORTANT: world units are pixels (gluOrtho2D(0,w,h,0)), unit cat is ~1.0 -> scale by pixels directly
+    float s = scalePixels;  // e.g., 90 -> ~90px wide
+
+    glPushMatrix();
+    glTranslatef(p.x, p.y, 0.0f);
+    glRotatef(angleDeg, 0.0f, 0.0f, 1.0f);
+    glScalef(s, s, 1.0f);
+    drawCuteCatUnit();
+    glPopMatrix();
+}
+
+// ------------------------------
+// Rendering
+// ------------------------------
+void display(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPushMatrix();
+
+    // 1) Control points (black)
+    if (displayControlPoints)
+    {
+        glPointSize(5);
+        glBegin(GL_POINTS);
+        for (int i = 0; i < nPt; i++)
+        {
+            glColor3f(0, 0, 0);
+            glVertex2d(ptList[i].x, ptList[i].y);
+        }
+        glEnd();
+        glPointSize(1);
+    }
+
+    // 2) Control polygons (green). Reflect C1-adjusted P1 in the displayed polygon.
+    if (displayControlLines && nPt >= 2)
+    {
+        glColor3f(0, 1, 0);
+        int nCurves = curveCount();
+        for (int c = 0; c < nCurves; ++c)
+        {
+            Point P0, P1, P2, P3, origP1; bool adjusted = false;
+            getCurveControlPoints(c, P0, P1, P2, P3, C1Continuity, origP1, adjusted);
+
+            glBegin(GL_LINE_STRIP);
+            glVertex2d(P0.x, P0.y);
+            glVertex2d(P1.x, P1.y);
+            glVertex2d(P2.x, P2.y);
+            glVertex2d(P3.x, P3.y);
+            glEnd();
+
+            if (adjusted)
+            {
+                glPointSize(6);
+                glBegin(GL_POINTS);
+                glColor3f(1, 0, 0);           // new/effective P1
+                glVertex2d(P1.x, P1.y);
+                glColor3f(0.7f, 0.7f, 0.7f); // original P1
+                glVertex2d(origP1.x, origP1.y);
+                glEnd();
+                glPointSize(1);
+            }
+        }
+
+        // Optional helper: if no full curve yet but 2+ points, connect them
+        if (nCurves == 0 && nPt >= 2) {
+            glBegin(GL_LINE_STRIP);
+            for (int i = 0; i < nPt; ++i) glVertex2d(ptList[i].x, ptList[i].y);
+            glEnd();
+        }
+    }
+
+    // 3) Bézier curves (blue)
+    {
+        int nCurves = curveCount();
+        for (int c = 0; c < nCurves; ++c)
+        {
+            Point P0, P1, P2, P3, origP1; bool adjusted = false;
+            getCurveControlPoints(c, P0, P1, P2, P3, C1Continuity, origP1, adjusted);
+
+            glColor3f(0, 0, 1);
+            glBegin(GL_LINE_STRIP);
+            for (int k = 0; k <= NLINESEGMENT; ++k)
+            {
+                float t = (float)k / (float)NLINESEGMENT;
+                FPoint q = evalBezier(P0, P1, P2, P3, t);
+                glVertex2f(q.x, q.y);
+            }
+            glEnd();
+        }
+    }
+
+    // 4) Tangent vectors (NOBJECTONCURVE per curve) — green arrows aligned with tangent
+    if (displayTangentVectors)
+    {
+        int nCurves = curveCount();
+        for (int c = 0; c < nCurves; ++c)
+        {
+            Point P0, P1, P2, P3, origP1; bool adjusted = false;
+            getCurveControlPoints(c, P0, P1, P2, P3, C1Continuity, origP1, adjusted);
+
+            for (int m = 0; m < NOBJECTONCURVE; ++m)
+            {
+                float t = (NOBJECTONCURVE == 1) ? 0.5f : (float)m / (float)(NOBJECTONCURVE - 1);
+                FPoint pos = evalBezier(P0, P1, P2, P3, t);
+                FPoint der = evalBezierDeriv(P0, P1, P2, P3, t);
+                drawArrowAt(pos, der, 0.4f); // base arrow ~100px; 0.4 -> ~40px
+            }
+        }
+    }
+
+    // 5) Objects along curve (NOBJECTONCURVE per curve) — your "Cute Cat"
+    if (displayObjects)
+    {
+        int nCurves = curveCount();
+        for (int c = 0; c < nCurves; ++c)
+        {
+            Point P0, P1, P2, P3, origP1; bool adjusted = false;
+            getCurveControlPoints(c, P0, P1, P2, P3, C1Continuity, origP1, adjusted);
+
+            for (int m = 0; m < NOBJECTONCURVE; ++m)
+            {
+                float t = (NOBJECTONCURVE == 1) ? 0.5f : (float)m / (float)(NOBJECTONCURVE - 1);
+                FPoint pos = evalBezier(P0, P1, P2, P3, t);
+                FPoint der = evalBezierDeriv(P0, P1, P2, P3, t);
+
+                // A good visual size for a 600x600 window:
+                drawObjectAt(pos, der, 60.0f); // ~90px cat
+            }
+        }
+    }
+
+    glPopMatrix();
+    glutSwapBuffers();
+}
+
+void reshape(int w, int h)
+{
+    glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    // world units == pixels
+    gluOrtho2D(0, w, h, 0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+void init(void)
+{
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+// ------------------------------
+// File I/O
+// ------------------------------
+void readFile()
+{
+    std::ifstream file("savefile.txt");
+    if (!file.is_open()) {
+        cout << "Error: Cannot open savefile.txt for reading." << endl;
+        return;
+    }
+
+    file >> nPt;
+    if (nPt > MAXPTNO) {
+        cout << "Error: File contains more than the maximum number of points." << endl;
+        nPt = MAXPTNO;
+    }
+    for (int i = 0; i < nPt; i++) {
+        file >> ptList[i].x >> ptList[i].y;
+    }
+    file.close();
+}
+
+void writeFile()
+{
+    std::ofstream file("savefile.txt");
+    if (!file.is_open()) {
+        cout << "Error: Cannot open savefile.txt for writing." << endl;
+        return;
+    }
+    file << nPt << endl;
+    for (int i = 0; i < nPt; i++) {
+        file << ptList[i].x << " " << ptList[i].y << endl;
+    }
+    file.close();
+}
+
+// ------------------------------
+// Interaction
+// ------------------------------
+void keyboard(unsigned char key, int x, int y)
+{
+    switch (key) {
+    case 'r': case 'R':
+        // Reading will overwrite points -> snapshot first
+        pushUndo();
+        readFile();
+        break;
+    case 'w': case 'W':
+        writeFile(); break;
+    case 'T': case 't': displayTangentVectors = !displayTangentVectors; break;
+    case 'O': case 'o': displayObjects = !displayObjects; break;
+    case 'P': case 'p': displayControlPoints = !displayControlPoints; break;
+    case 'L': case 'l': displayControlLines = !displayControlLines; break;
+    case 'C': case 'c': C1Continuity = !C1Continuity; break;
+    case 'E': case 'e':
+        // Clear all points -> snapshot first
+        pushUndo();
+        nPt = 0;
+        break;
+    case 'Z': case 'z':
+        if (!popUndo()) {
+            cout << "Nothing to undo." << endl;
+        }
+        break;
+    case 'Q': case 'q': exit(0); break;
+    default: break;
+    }
+    glutPostRedisplay();
+}
+
+void mouse(int button, int state, int x, int y)
+{
+    enum { MOUSE_LEFT_BUTTON = 0 };
+    if ((button == MOUSE_LEFT_BUTTON) && (state == GLUT_UP))
+    {
+        if (nPt == MAXPTNO) {
+            cout << "Error: Exceeded the maximum number of points." << endl;
+            return;
+        }
+        // Adding a point changes the state -> snapshot first
+        pushUndo();
+        ptList[nPt].x = x;
+        ptList[nPt].y = y;
+        nPt++;
+    }
+    glutPostRedisplay();
+}
+
+// ------------------------------
+// Main
+// ------------------------------
+int main(int argc, char** argv)
+{
+    cout << "CS3241 Lab 4" << endl << endl;
+    cout << "Left mouse click: Add a control point" << endl;
+    cout << "Q: Quit" << endl;
+    cout << "P: Toggle displaying control points" << endl;
+    cout << "L: Toggle displaying control lines" << endl;
+    cout << "E: Erase all points (Clear)" << endl;
+    cout << "C: Toggle C1 continuity" << endl;
+    cout << "T: Toggle displaying tangent vectors" << endl;
+    cout << "O: Toggle displaying objects (Cute Cat)" << endl;
+    cout << "Z: Undo last operation" << endl;
+    cout << "R: Read in control points from \"savefile.txt\"" << endl;
+    cout << "W: Write control points to \"savefile.txt\"" << endl;
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(600, 600);
+    glutInitWindowPosition(50, 50);
+    glutCreateWindow("CS3241 Assignment 4");
+
+    init();
+    glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutMouseFunc(mouse);
+    glutKeyboardFunc(keyboard);
+    glutMainLoop();
+
+    return 0;
+}

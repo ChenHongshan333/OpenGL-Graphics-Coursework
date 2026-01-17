@@ -1,0 +1,80 @@
+Trying to load texture: slytherin.ppm
+Magic: P6
+Size read from header: 1000 x 948, maxv = 255
+Texture loaded successfully: slytherin.ppm (1000 x 948)
+Trying to load texture: hufflepuff.ppm
+Magic: P6
+Size read from header: 1080 x 1024, maxv = 255
+Texture loaded successfully: hufflepuff.ppm (1080 x 1024)
+Trying to load texture: hogwarts.ppm
+Magic: P6
+Size read from header: 1600 x 1727, maxv = 255
+Texture loaded successfully: hogwarts.ppm (1600 x 1727)
+Trying to load texture: gryffindor.ppm
+Magic: P6
+Size read from header: 900 x 720, maxv = 255
+Texture loaded successfully: gryffindor.ppm (900 x 720)
+Trying to load texture: hogwarts.ppm
+Magic: P6
+Size read from header: 1600 x 1727, maxv = 255
+Texture loaded successfully: hogwarts.ppm (1600 x 1727)
+Trying to load texture: slytherin.ppm
+Magic: P6
+Size read from header: 1000 x 948, maxv = 255
+Texture loaded successfully: slytherin.ppm (1000 x 948)
+Trying to load texture: hufflepuff.ppm
+Magic: P6
+Size read from header: 1080 x 1024, maxv = 255
+Texture loaded successfully: hufflepuff.ppm (1080 x 1024)
+Trying to load texture: gryffindor.ppm
+Magic: P6
+Size read from header: 900 x 720, maxv = 255
+Texture loaded successfully: gryffindor.ppm (900 x 720)
+Trying to load texture: hogwarts.ppm
+Magic: P6
+Size read from header: 1600 x 1727, maxv = 255
+Texture loaded successfully: hogwarts.ppm (1600 x 1727)
+Trying to load texture: slytherin.ppm
+Magic: P6
+Size read from header: 1000 x 948, maxv = 255
+Texture loaded successfully: slytherin.ppm (1000 x 948)
+Trying to load texture: hufflepuff.ppm
+Magic: P6
+Size read from header: 1080 x 1024, maxv = 255
+Texture loaded successfully: hufflepuff.ppm (1080 x 1024)
+Trying to load texture: gryffindor.ppm
+Magic: P6
+Size read from header: 900 x 720, maxv = 255
+Texture loaded successfully: gryffindor.ppm (900 x 720)
+Trying to load texture: hogwarts.ppm
+Magic: P6
+Size read from header: 1600 x 1727, maxv = 255
+Texture loaded successfully: hogwarts.ppm (1600 x 1727)
+Trying to load texture: slytherin.ppm
+Magic: P6
+Size read from header: 1000 x 948, maxv = 255
+Texture loaded successfully: slytherin.ppm (1000 x 948)
+Trying to load texture: hufflepuff.ppm
+Magic: P6
+Size read from header: 1080 x 1024, maxv = 255
+Texture loaded successfully: hufflepuff.ppm (1080 x 1024)
+Trying to load texture: gryffindor.ppm
+Magic: P6
+Size read from header: 900 x 720, maxv = 255
+Texture loaded successfully: gryffindor.ppm (900 x 720)
+Trying to load texture: hogwarts.ppm
+Magic: P6
+Size read from header: 1600 x 1727, maxv = 255
+Texture loaded successfully: hogwarts.ppm (1600 x 1727)
+Trying to load texture: slytherin.ppm
+Magic: P6
+Size read from header: 1000 x 948, maxv = 255
+Texture loaded successfully: slytherin.ppm (1000 x 948)
+Trying to load texture: hufflepuff.ppm
+Magic: P6
+Size read from header: 1080 x 1024, maxv = 255
+Texture loaded successfully: hufflepuff.ppm (1080 x 1024)
+Trying to load texture: gryffindor.ppm
+Magic: P6
+Size read from header: 900 x 720, maxv = 255
+Texture loaded successfully: gryffindor.ppm (900 x 720)

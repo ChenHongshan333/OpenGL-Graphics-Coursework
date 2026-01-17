@@ -1,0 +1,206 @@
+# svg_to_savefile_select.py
+# SVG <path> -> CS3241 savefile.txt
+# Fixes:
+#  - per-subpath grouping (no cross-joins)
+#  - transform="translate/scale"
+#  - 4+3+3… chaining
+#  - center-fit to 600x600
+#  - **NEW**: keep only the most important subpaths by score (length+area), with min length/area thresholds
+
+import re
+import argparse
+import xml.etree.ElementTree as ET
+from svg.path import parse_path, Line, QuadraticBezier, CubicBezier, Arc
+
+# ---------- transforms ----------
+_TRANSFORM_RE = re.compile(r'(translate|scale)\s*\(\s*([-\d\.eE]+)(?:\s*,\s*([-\d\.eE]+))?\s*\)')
+
+def parse_transform_attr(tstr: str):
+    sx = sy = 1.0
+    tx = ty = 0.0
+    for m in _TRANSFORM_RE.finditer(tstr or ''):
+        kind = m.group(1)
+        a = float(m.group(2))
+        b = m.group(3)
+        if kind == 'translate':
+            if b is None:
+                tx += a
+            else:
+                tx += a; ty += float(b)
+        elif kind == 'scale':
+            if b is None:
+                sx *= a; sy *= a
+            else:
+                sx *= a; sy *= float(b)
+    return sx, sy, tx, ty
+
+def aff(z: complex, sx, sy, tx, ty) -> complex:
+    return complex(z.real * sx + tx, z.imag * sy + ty)
+
+# ---------- parsing ----------
+def collect_path_elems(svg_file):
+    root = ET.parse(svg_file).getroot()
+    ns_clean = lambda t: t.split('}')[-1]
+    paths = []
+    for el in root.iter():
+        if ns_clean(el.tag) == 'path':
+            d = el.attrib.get('d')
+            if not d: continue
+            try:
+                p = parse_path(d)  # validate
+                if len(p) > 0:
+                    paths.append(el)
+            except Exception:
+                pass
+    print(f"[info] path elements: {len(paths)}")
+    return paths
+
+def cubicize_elem_into_subpaths(elem):
+    """Return List[List[(P0,P1,P2,P3)]]"""
+    d = elem.attrib.get('d', '')
+    path = parse_path(d)
+    sx, sy, tx, ty = parse_transform_attr(elem.attrib.get('transform', ''))
+
+    subpaths, current = [], []
+    last_end = None; EPS = 1e-9
+
+    def push_cubic(P0, P1, P2, P3):
+        nonlocal current, last_end
+        if last_end is None or abs(P0 - last_end) > EPS:
+            if current: subpaths.append(current)
+            current = []
+        current.append((P0, P1, P2, P3))
+        last_end = P3
+
+    for seg in path:
+        if isinstance(seg, CubicBezier):
+            push_cubic(seg.start, seg.control1, seg.control2, seg.end)
+        elif isinstance(seg, QuadraticBezier):
+            P0, Q1, P3 = seg.start, seg.control, seg.end
+            P1 = P0 + (Q1 - P0) * (2/3)
+            P2 = P3 + (Q1 - P3) * (2/3)
+            push_cubic(P0, P1, P2, P3)
+        elif isinstance(seg, Line):
+            P0, P3 = seg.start, seg.end
+            mid = (P0 + P3) / 2
+            push_cubic(P0, mid, mid, P3)
+        elif isinstance(seg, Arc):
+            try:
+                for cc in seg.as_cubic_curves():
+                    push_cubic(cc.start, cc.control1, cc.control2, cc.end)
+            except Exception:
+                pass
+        else:
+            last_end = None
+
+    if current: subpaths.append(current)
+
+    # transform
+    if sx != 1.0 or sy != 1.0 or tx != 0.0 or ty != 0.0:
+        subpaths = [[
+            (aff(P0,sx,sy,tx,ty), aff(P1,sx,sy,tx,ty),
+             aff(P2,sx,sy,tx,ty), aff(P3,sx,sy,tx,ty))
+            for (P0,P1,P2,P3) in sp
+        ] for sp in subpaths]
+    return subpaths
+
+# ---------- geometry helpers for filtering ----------
+def subpath_bbox(sp):
+    xs = []; ys = []
+    for (P0,P1,P2,P3) in sp:
+        xs += [P0.real, P1.real, P2.real, P3.real]
+        ys += [P0.imag, P1.imag, P2.imag, P3.imag]
+    return min(xs), min(ys), max(xs), max(ys)
+
+def subpath_length(sp):
+    # approximate by chord lengths of cubics (P0->P1->P2->P3 as polyline)
+    import math
+    total = 0.0
+    for (P0,P1,P2,P3) in sp:
+        total += abs(P1 - P0) + abs(P2 - P1) + abs(P3 - P2)
+    return total
+
+def subpath_area(sp):
+    # area of its bbox as a proxy
+    minx, miny, maxx, maxy = subpath_bbox(sp)
+    return max(0.0, (maxx - minx) * (maxy - miny))
+
+# ---------- main ----------
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("input_svg")
+    ap.add_argument("output_txt")
+    # 过滤参数（默认很保守：保留1000条、但要求最小长度与最小bbox面积）
+    ap.add_argument("--keep-top", type=int, default=1000, help="keep top-N subpaths by score")
+    ap.add_argument("--min-len", type=float, default=150.0, help="drop subpaths shorter than this length (in SVG units)")
+    ap.add_argument("--min-area", type=float, default=2000.0, help="drop subpaths with bbox area smaller than this")
+    ap.add_argument("--score-lambda", type=float, default=0.0005, help="score = length + lambda * bbox_area")
+    args = ap.parse_args()
+
+    elems = collect_path_elems(args.input_svg)
+
+    # 1) flatten to subpaths
+    subpaths_all = []
+    for el in elems:
+        subpaths_all += cubicize_elem_into_subpaths(el)
+
+    if not subpaths_all:
+        print("[error] no subpaths parsed")
+        with open(args.output_txt,"w") as f: f.write("0\n")
+        return
+
+    # 2) filter by min length / min area
+    filtered = []
+    for sp in subpaths_all:
+        L = subpath_length(sp)
+        A = subpath_area(sp)
+        if L >= args.min_len and A >= args.min_area:
+            filtered.append((sp, L, A))
+    if not filtered:
+        print("[warn] all subpaths filtered; relaxing thresholds")
+        filtered = [(sp, subpath_length(sp), subpath_area(sp)) for sp in subpaths_all]
+
+    # 3) select top-N by score
+    lam = args.score_lambda
+    scored = sorted(filtered, key=lambda t: (t[1] + lam * t[2]), reverse=True)
+    if args.keep_top < len(scored):
+        scored = scored[:args.keep-top]
+
+    kept_subpaths = [t[0] for t in scored]
+    print(f"[info] total subpaths={len(subpaths_all)}, kept={len(kept_subpaths)}")
+
+    # 4) gather points (for bbox & output)
+    pts = []
+    for sp in kept_subpaths:
+        for (P0,P1,P2,P3) in sp:
+            pts += [P0,P1,P2,P3]
+
+    xs = [p.real for p in pts]; ys = [p.imag for p in pts]
+    minx, maxx = min(xs), max(xs); miny, maxy = min(ys), max(ys)
+    width, height = maxx - minx, maxy - miny
+    scale = 600.0 / max(width, height)
+    cx = (minx + maxx) / 2.0; cy = (miny + maxy) / 2.0
+
+    # 5) write with 4+3+3… per subpath; subpaths independent
+with open(args.output_txt, "w") as f:
+    total_pts = 0
+    for sp in kept_subpaths:
+        first = True
+        for (P0, P1, P2, P3) in sp:
+            seq = (P0, P1, P2, P3) if first else (P1, P2, P3)
+            for P in seq:
+                xi = int(round((P.real - cx) * scale + 300))
+                yi = int(round((P.imag - cy) * scale + 300))
+                f.write(f"{xi} {yi}\n")
+                total_pts += 1
+            first = False
+        # 🔹 分段结束标志 —— 每条子路径后写一行 -1 -1
+        f.write("-1 -1\n")
+
+print(f"[done] wrote {args.output_txt} with {total_pts} points")
+print(f"[info] kept_subpaths={len(kept_subpaths)}, scale={scale:.4f}, "
+      f"bbox=({minx:.1f},{miny:.1f})-({maxx:.1f},{maxy:.1f})")
+
+
+if __name__ == "__main__":
+    main()
