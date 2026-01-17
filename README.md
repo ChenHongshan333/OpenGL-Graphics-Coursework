@@ -8,6 +8,7 @@ A Visual Studio 2022 (C++) collection of OpenGL/FreeGLUT assignments for CS3241,
 - [What’s Included](#whats-included)
 - [Install](#install)
 - [Usage](#usage)
+- [Controls](#controls)
 - [Repository Layout](#repository-layout)
 - [Notes on Assets (Textures / Input TXT)](#notes-on-assets-textures--input-txt)
 - [Contributing](#contributing)
@@ -62,6 +63,43 @@ This repo uses a shared FreeGLUT setup stored in `deps/` and referenced via a sh
 2. In Solution Explorer, right-click an assignment project
 3. Choose **Set as Startup Project**
 4. Run with **Local Windows Debugger**
+
+## Controls
+Controls vary by assignment. Please open each project and refer to the list below.
+
+- **Assignment 2 — Animation (2D)**
+  - Toggle Time Mode: T
+  - Scale: +/-
+  - Translate: W/A/S/D
+  - Exit: ESC/q
+
+- **Assignment 3 — Lighting & Shading**
+  - 1-2: Draw different objects
+  - S: Toggle Smooth Shading
+  - H: Toggle Highlight
+  - W: Draw Wireframe
+  - P: Draw Polygon (filled)
+  - V: Draw Vertices
+  - Q: Quit
+  - Left mouse click and drag: rotate the object
+  - Right mouse click and drag: zooming
+
+- **Assignment 4 — Bezier Curves**
+  - P: Toggle displaying control points
+  - L: Toggle displaying control lines
+  - E: Erase all points (Clear)
+  - C: Toggle C1 continuity (within a segment)
+  - T: Toggle displaying tangent vectors
+  - O: Toggle displaying objects (Cute Cat)
+  - Z: Undo last operation
+  - Q: Quit
+  - Left mouse click: Add a control point
+
+- **Assignment 5 — Ray Tracing**
+  - S : go to next scene
+  - Q : quit
+  - A/B/C/D : toggle textures (Second scene only)
+
 
 ## Repository Layout
 - `OpenGL-Coursework.sln` — main portfolio solution to run all assignments
