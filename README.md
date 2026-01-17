@@ -1,89 +1,28 @@
-############################################
-# Visual Studio / MSVC
-############################################
-.vs/
-*.user
-*.suo
-*.VC.db
-*.VC.VC.opendb
+# OpenGL Graphics Coursework (VS2022 + FreeGLUT)
 
-############################################
-# Build outputs
-############################################
-Debug/
-Release/
-x64/
-x86/
-bin/
-obj/
-out/
-build/
-ipch/
+A Visual Studio 2022 (C++) collection of OpenGL/FreeGLUT assignments for CS3241, organized as a single portfolio solution.
 
-# Per-project build folders (common)
-**/Debug/
-**/Release/
-**/x64/
-**/x86/
-**/bin/
-**/obj/
-**/out/
-**/build/
-**/ipch/
+**Project Link**: <https://chenhongshan333.github.io/OpenGL-Graphics-Coursework/>
 
-############################################
-# MSVC intermediate / output files
-############################################
-*.obj
-*.pdb
-*.ilk
-*.idb
-*.tlog
-*.log
-*.exp
-*.exe
+## Table of Contents
+- [Background](#background)
+- [What’s Included](#whats-included)
+- [Install](#install)
+- [Usage](#usage)
+- [Controls](#controls)
+- [Repository Layout](#repository-layout)
+- [Notes on Assets (Textures / Input TXT)](#notes-on-assets-textures--input-txt)
+- [Contributing](#contributing)
+- [License](#license)
 
-############################################
-# OS junk
-############################################
-Thumbs.db
-.DS_Store
+## Background
+This repository bundles multiple OpenGL assignments into one portfolio-friendly codebase. Each assignment is an independent Visual Studio project, and they can be built/run from the main solution.
 
-############################################
-# Python / venv (in case some folders contain it)
-############################################
-venv/
-.venv/
-**/venv/
-**/.venv/
-__pycache__/
-*.pyc
+## What’s Included
+- **Assignment 1 — Transformations (2D)**
+- Translation, rotation, and scaling via transformation matrices
+- Create a cute 2D cat using basic OpenGL primitives
 
-############################################
-# Node (if your site uses it)
-############################################
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-ංyarn-error.log*
-dist/
-
-############################################
-# Media: ignore all videos by default
-############################################
-*.mp4
-*.mov
-*.mkv
-*.webm
-
-# Re-allow only the two specific videos under docs/static/video
-!docs/static/video/
-!docs/static/video/hw2.mp4
-!docs/static/video/hw3_Mobius.mp4
-
-############################################
-# Optional: keep FreeGLUT binaries tracked (if you ignore *.dll/*.lib elsewhere)
-# (Uncomment if you ever add global ignores for .dll/.lib)
-############################################
-# !deps/**/freeglut.dll
-# !deps/**/freeglut.lib
+- **Assignment 2 — Animation (2D)**
+- Simulate a 2D solar system with planets and comets
+- Optional “time mode”: planets are arranged to display the real-world time
