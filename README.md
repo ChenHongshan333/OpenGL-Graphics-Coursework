@@ -1,6 +1,7 @@
 # OpenGL Graphics Coursework (VS2022 + FreeGLUT)
 
 A Visual Studio 2022 (C++) collection of OpenGL/FreeGLUT assignments for CS3241, organized as a single portfolio solution.
+**Project Link**: <https://chenhongshan333.github.io/OpenGL-Graphics-Coursework/>
 
 ## Table of Contents
 - [Background](#background)
