@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>OpenGl Graphics Coursework</title>
+  <meta name="title" content="OpenGl Graphics Coursework (VS2022 + FreeGLUT)">
+  <meta name="description"
+    content="A Visual Studio 2022 (C++) collection of OpenGL/FreeGLUT assignments for CS3241, organized as a single portfolio solution.">
+  <meta name="keywords" content="OpenGl, Graphics, Coursework, Hongshan">
+  <meta name="author" content="Hongshan">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="OpenGl Graphics Coursework">
+  <meta property="og:description"
+    content="A Visual Studio 2022 (C++) collection of OpenGL/FreeGLUT assignments for CS3241, organized as a single portfolio solution.">
+  <!-- optional -->
+  <!-- <meta property="og:image" content="static/images/social_preview.png"> -->
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="static/images/favicon-v3.ico">
+  <link rel="apple-touch-icon" href="static/images/favicon-v3.ico">
+
+  <!-- CSS (must keep, otherwise page becomes "ugly") -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'">
+
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- JS (keep for carousel / dropdown / interactions) -->
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+
+  <!-- Mermaid for Architecture diagram -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script defer src="static/js/mermaid-init.js"></script>
+</head>
+
+
+
+<body>
+
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+
+  <main id="main-content">
+    <section class="hero">
+      <div class="hero-body">
+        <div class="container is-max-desktop">
+          <div class="columns is-centered">
+            <div class="column has-text-centered">
+              <!-- TODO: Replace with your paper title -->
+              <h1 class="title is-1 publication-title">OpenGl Graphics Coursework</h1>
+              <div class="is-size-5 publication-authors">
+                <span class="author-block">
+                  <a href="https://github.com/ChenHongshan333" target="_blank">Chen Hongshan</a>
+                </span>
+              </div>
+
+              <div class="is-size-6 publication-authors">
+                <span class="author-block">Visual Studio 2022 · FreeGLUT · OpenGL</span>
+              </div>
+
+              <div class="publication-links">
+
+                <span class="link-block">
+                  <a href="https://github.com/ChenHongshan333/OpenGL-Graphics-Coursework" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>GitHub</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="https://github.com/ChenHongshan333/OpenGL-Graphics-Coursework#readme" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-book"></i></span>
+                    <span>README</span>
+                  </a>
+                </span>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+      </div>
+    </section>
+
+
+
+    <!-- Paper abstract -->
+    <section class="section hero is-light">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Overview</h2>
+            <div class="content has-text-justified">
+              <!-- TODO: Replace with your paper abstract -->
+              <p>
+              <p>
+                This OpenGL portfolio is a curated collection of my CS3241 coursework, built in C++ with FreeGLUT on
+                Visual Studio 2022.
+                Across five assignments, I progressed from core 2D transformations to animation systems, lighting and
+                shading, Bezier curve
+                modeling, and finally ray tracing with shadows and texture mapping. Each project is implemented as an
+                independent Visual
+                Studio project and organized under a single solution for easy build-and-run, with shared FreeGLUT
+                configuration to keep the
+                setup lightweight and reproducible. Together, these works showcase my understanding of real-time
+                graphics fundamentals and
+                my ability to translate mathematical concepts into interactive visual demos.
+              </p>
+
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End paper abstract -->
+
+
+    <!-- HW1 -->
+    <section class="section hero">
+      <div class="container is-max-desktop">
+        <div class="has-text-centered">
+          <h2 class="title is-3">Transformation (2D)</h2>
+        </div>
+        <div class="columns is-centered is-vcentered">
+          <!-- Left: Text content -->
+          <div class="column is-half text-content-column">
+            <div class="content has-text-justified">
+              <p>
+                This assignment focuses on core 2D transformations: translation, rotation, and scaling.
+                <br>
+                <br>
+                Using basic OpenGL primitives and transformation matrices, I constructed a cute 2D cat scene from
+                scratch.
+                <br>
+                <br>
+                The goal was to build intuition for coordinate spaces and how matrix operations control positioning and
+                shape.
+                <br>
+                <br>
+                It also laid the foundation for later work involving animation and camera-like control.
+              </p>
+            </div>
+          </div>
+          <!-- Right: Image card -->
+          <div class="column is-half">
+            <div class="image-card">
+              <div class="image-card-inner">
+                <img src="static/images/hw1_pic.png" alt="2D Transformation Result" loading="lazy" />
+                <p class="image-card-caption">2D Cat Scene created with OpenGL transformations</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End HW1 -->
+
+
+    <!-- HW2 -->
+    <section class="section hero is-light">
+      <div class="container is-max-desktop">
+        <div class="has-text-centered">
+          <h2 class="title is-3">Animation (2D Solar System)</h2>
+        </div>
+        <div class="columns is-centered is-vcentered">
+          <!-- Left: Video card -->
+          <div class="column is-half">
+            <div class="image-card">
+              <div class="image-card-inner">
+                <video controls muted loop preload="metadata">
+                  <source src="static/videos/hw2.mp4" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+                <p class="image-card-caption">2D Solar System Animation with real-time orbital motion</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Text content -->
+          <div class="column is-half text-content-column">
+            <div class="content has-text-justified">
+              <p>
+                In this project, I built a 2D solar system simulation with multiple planets and comets moving in orbital
+                paths.
+                <br>
+                <br>
+                The system supports an optional "time mode," where the arrangement of planets visually encodes the
+                real-world time at the moment the program runs.
+                This assignment strengthened my understanding of hierarchical motion, periodic functions, and time-based
+                updates.
+                <br>
+                <br>
+                It also emphasized designing animations that remain stable and smooth frame-to-frame.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End HW2 -->
+
+
+    <!-- HW3 -->
+    <section class="section hero">
+      <div class="container is-max-desktop">
+        <div class="has-text-centered">
+          <h2 class="title is-3">Lighting and Shading</h2>
+        </div>
+        <div class="columns is-centered is-vcentered">
+          <!-- Left: Text content -->
+          <div class="column is-half text-content-column">
+            <div class="content has-text-justified">
+              <p>
+                This assignment explores how light interacts with surfaces through different lighting and shading
+                models.
+                <br>
+                <br>
+                I applied multiple approaches to compare how choices like diffuse/specular components and shading
+                strategies affect realism and visual style.
+                <br>
+                <br>
+                The project highlights the difference between “how we compute light” and “how we display it,” and why
+                those decisions matter.
+                It also helped me build a stronger mental model of normals, material parameters, and illumination
+                behavior.
+              </p>
+
+            </div>
+          </div>
+          <!-- Right: Image carousel -->
+          <div class="column is-half">
+            <div id="lighting-carousel" class="carousel results-carousel">
+              <div class="item">
+                <img src="static/images/hw3_flat_shading.png" alt="Flat shading on a sphere" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Flat shading on a sphere
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw3_smooth_shading.png" alt="Smooth shading on a sphere" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Smooth shading on a sphere
+                </h2>
+              </div>
+
+              <div class="item">
+                <img src="static/images/hw3_flat_highlight.png" alt="Flat shading with highlights on a sphere"
+                  loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Flat shading with highlights on a sphere
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw3_smooth_highlight.png" alt="Smooth shading with highlights on a sphere"
+                  loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Smooth shading with highlights on a sphere
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw3_wire.png" alt="Wireframe wiew of a sphere" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Wireframe view of a sphere
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw3_point.png" alt="Point structure of a sphere" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Point structure of a sphere
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw3_Mobius.png" alt="Shaded Mobius strip" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Shaded Mobius strip
+                </h2>
+              </div>
+
+              <div class="item">
+                <img src="static/images/hw3_Mobius_wire.png" alt="Wireframe view of a Mobius strip" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Wireframe view of a Mobius strip
+                </h2>
+              </div>
+
+              <div class="item">
+                <video controls muted loop preload="metadata">
+                  <source src="static/videos/hw3_Mobius.mp4" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+                <h2 class="subtitle has-text-centered">
+                  Mobius Strip Animation
+                </h2>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End HW3 -->
+
+    <!-- HW4 -->
+    <section class="section hero is-light">
+      <div class="container is-max-desktop">
+        <div class="has-text-centered">
+          <h2 class="title is-3">Bezier Curves</h2>
+        </div>
+        <div class="columns is-centered is-vcentered">
+          <!-- Left: Image carousel -->
+          <div class="column is-half">
+            <div id="bezier-carousel" class="carousel results-carousel">
+              <div class="item">
+                <img src="static/images/hw4_basic.png" alt="Basic Bezier curve implementation" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Basic Bezier curve
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw4_C1.png" alt="C1 continuous Bezier curve" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  C1 continuous Bezier curve
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw4_cat.png" alt="Cat shape using Bezier curves" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Bezier in cat shape
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw4_tangent.png" alt="Tangent vectors on Bezier curve" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Bezier curve with tangent vectors shown
+                </h2>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Text content -->
+          <div class="column is-half text-content-column">
+            <div class="content has-text-justified">
+              <p>
+                This project implements Bezier curve drawing and curve-based shape construction. 
+                <br>
+                <br>
+                I can draw Bezier curves manually as there is no built-in functions that support Bezier curves in OpenGL, 
+                and also generate more complex curve graphs by parsing an input text file. 
+                The focus is on understanding curve evaluation, control points, and how small changes in parameters reshape the final geometry. 
+                <br>
+                <br>
+                It also demonstrates how a simple mathematical representation can produce expressive and intricate visual designs.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End HW4 -->
+
+
+    <!-- HW5 -->
+    <section class="section hero">
+      <div class="container is-max-desktop">
+        <div class="has-text-centered">
+          <h2 class="title is-3">Ray Tracing</h2>
+        </div>
+        <div class="columns is-centered is-vcentered">
+          <!-- Left: Text content -->
+          <div class="column is-half text-content-column">
+            <div class="content has-text-justified">
+              <p>
+                In this project, I implemented ray tracing to render different subjects with more physically grounded effects.
+                <br>
+                <br>
+                The renderer includes shadow computation and texture mapping, moving beyond real-time rasterization toward offline-style rendering.
+                <br>
+                <br>
+                This project reinforced core ray tracing concepts such as ray–object intersection, shading at hit points, and shadow rays.
+                <br>
+                <br>
+              </p>
+
+            </div>
+          </div>
+          <!-- Right: Image carousel -->
+          <div class="column is-half">
+            <div id="lighting-carousel" class="carousel results-carousel">
+              <div class="item">
+                <img src="static/images/hw5_basic.png" alt="Basic ray tracing" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Basic ray tracing on 4 spheres
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw5_scene2.png" alt="Ray tracing scene 2" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Ray tracing on 4 spheres with shadow effects
+                </h2>
+              </div>
+
+              <div class="item">
+                <img src="static/images/hw5_t1.png" alt="Texture mapping on a sphere"
+                  loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Texture mapping on sphere 1
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw5_t2.png" alt="Texture mapping on a sphere"
+                  loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Texture mapping on sphere 2
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw5_t3.png" alt="Texture mapping on a sphere" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Texture mapping on sphere 3
+                </h2>
+              </div>
+              <div class="item">
+                <img src="static/images/hw5_t4.png" alt="Texture mapping on a sphere" loading="lazy" />
+                <h2 class="subtitle has-text-centered">
+                  Texture mapping on sphere 4
+                </h2>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End HW5 -->
+
+
+    <footer class="footer">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-8">
+            <div class="content">
+
+              <p>
+                This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template"
+                  target="_blank">Academic Project Page Template</a> which was adopted from the <a
+                  href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+                You are free to borrow the source code of this website, we just ask that you link back to this page in
+                the footer. <br> This website is licensed under a <a rel="license"
+                  href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+                  Commons Attribution-ShareAlike 4.0 International License</a>.
+              </p>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Statcounter tracking code -->
+
+    <!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
+
+    <!-- End of Statcounter Code -->
+
+</body>
+
+</html>
