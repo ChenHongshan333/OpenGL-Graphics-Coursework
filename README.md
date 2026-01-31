@@ -21,13 +21,6 @@ This repository bundles multiple OpenGL assignments into one portfolio-friendly 
 ## What’s Included
 - **Assignment 1 — Transformations (2D)**
 
-- Translation, rotation, and scaling via transformation matrices
-- Create a cute 2D cat using basic OpenGL primitives
-
-- **Assignment 2 — Animation (2D)**
-- Simulate a 2D solar system with planets and comets
-- Optional “time mode”: planets are arranged to display the real-world time
-=======
   - Translation, rotation, and scaling via transformation matrices
   - Create a cute 2D cat using basic OpenGL primitives
 
